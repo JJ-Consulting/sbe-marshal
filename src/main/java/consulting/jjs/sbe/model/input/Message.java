@@ -1,24 +1,32 @@
 package consulting.jjs.sbe.model.input;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Message {
 
-  private Integer messageSchemaIndex;
-  private String messageSchemaName;
-  private String messageSchemaId;
+  private String      name;
+  private Integer     id;
+  private List<Field> fields = new ArrayList<>();
 
-  public Message(Integer messageSchemaIndex) {
-    this.messageSchemaIndex = messageSchemaIndex;
+  public Message(Integer id) {
+    this.id = id;
   }
 
-  public Message(String messageSchemaName, String messageSchemaId) {
-    this.messageSchemaName = messageSchemaName;
-    this.messageSchemaId = messageSchemaId;
+  public Message(String name) {
+    this.name = name;
   }
-
-  private final List<Field> fields = new ArrayList<>();
 
   public Message addField(Field field) {
     this.fields.add(field);

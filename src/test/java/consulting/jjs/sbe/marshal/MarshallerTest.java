@@ -11,8 +11,9 @@ public class MarshallerTest {
   @Test
   public void shouldUnmarshallSchema() throws FunctionalException {
     InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("sbe-schema.xml");
-
-    MessageSchema messageSchema = new Marshaller().unmarshal(inputStream);
+    Marshaller marshaller = new Marshaller();
+    marshaller.unmarshal(inputStream);
+    MessageSchema messageSchema = marshaller.getMessageSchema();
 
     System.out.println(messageSchema);
   }

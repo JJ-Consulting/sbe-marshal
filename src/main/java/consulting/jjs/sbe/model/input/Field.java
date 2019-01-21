@@ -1,26 +1,30 @@
 package consulting.jjs.sbe.model.input;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Field {
 
-  private Integer typeIndex;
-  private String typeName;
-  private final String id;
-  private final String name;
-  private final String value;
+  private Integer id;
+  private String  name;
+  private String  value;
 
-  public Field(int typeIndex, String id, String name, String value) {
-    this.typeIndex = typeIndex;
+  public Field(int id, String value) {
     this.id = id;
-    this.name = name;
+    this.name = null;
     this.value = value;
   }
 
-  public Field(String typeName, String id, String name, String value) {
-    this.typeName = typeName;
-    this.id = id;
+  public Field(String name, String value) {
+    this.id = null;
     this.name = name;
     this.value = value;
   }

@@ -3,7 +3,6 @@ package consulting.jjs.sbe.model.template;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import consulting.jjs.sbe.marshal.PostDeserialize;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -13,7 +12,7 @@ import java.util.List;
 @Getter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TemplateTypes implements PostDeserialize {
+public class TemplateTypes {
 
   @JacksonXmlElementWrapper(useWrapping = false)
   @JsonProperty("type")
@@ -31,8 +30,4 @@ public class TemplateTypes implements PostDeserialize {
   @JsonProperty("set")
   private List<TemplateSet> sets = new ArrayList<>();
 
-  @Override
-  public void afterUnmarshalling() {
-    types.forEach(TemplateType::afterUnmarshalling);
-  }
 }

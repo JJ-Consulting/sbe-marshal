@@ -60,7 +60,7 @@
       <validValue name="B">B</validValue>
       <validValue name="C">C</validValue>
     </enum>
-    <set name="OptionalExtras" encodingType="uint8">
+    <set name="OptionalExtras" encodingType="uint8"><!-- max = uint64 -->
       <choice name="sunRoof">0</choice>
       <choice name="sportsPack">1</choice>
       <choice name="cruiseControl">2</choice>

@@ -1,9 +1,7 @@
 package consulting.jjs.sbe.model.template;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -16,13 +14,8 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 @ToString
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class TemplateMessage implements Supplier<Stream<? extends TemplateField>> {
+public class TemplateGroup implements Supplier<Stream<? extends TemplateField>> {
 
-  @JacksonXmlProperty(isAttribute = true)
-  private String              name;
-  @JacksonXmlProperty(isAttribute = true)
-  private Integer             id;
   @JacksonXmlElementWrapper(useWrapping = false)
   @JsonProperty("field")
   private List<TemplateField> fields = new ArrayList<>();
@@ -31,7 +24,10 @@ public class TemplateMessage implements Supplier<Stream<? extends TemplateField>
   private List<TemplateGroup> groups = new ArrayList<>();
   @JacksonXmlElementWrapper(useWrapping = false)
   @JsonProperty("data")
-  private List<TemplateData>  datas  = new ArrayList<>();
+  private List<TemplateData> datas = new ArrayList<>();
+  private Integer id;
+  private String name;
+  private String dimensionType;
 
   @Override
   public Stream<? extends TemplateField> get() {

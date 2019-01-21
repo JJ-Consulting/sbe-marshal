@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import consulting.jjs.sbe.marshal.ByteOrderDeserializer;
-import consulting.jjs.sbe.marshal.PostDeserialize;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,10 +17,10 @@ import java.util.List;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MessageSchema implements PostDeserialize {
+public class MessageSchema {
 
-  private String    id;
-  private String    version;
+  private Integer   id;
+  private Integer   version;
   @JsonDeserialize(using = ByteOrderDeserializer.class)
   private ByteOrder byteOrder;
 
@@ -32,10 +31,6 @@ public class MessageSchema implements PostDeserialize {
   @JacksonXmlElementWrapper(useWrapping = false)
   private List<TemplateTypes> types = new ArrayList<>();
 
-  @Override
-  public void afterUnmarshalling() {
-    types.forEach(TemplateTypes::afterUnmarshalling);
-  }
 }
 
 
