@@ -16,9 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 public class Message {
 
-  private String      name;
-  private Integer     id;
-  private List<Field> fields = new ArrayList<>();
+  private String           name;
+  private Integer          id;
+  private List<FieldValue> fields = new ArrayList<>();
 
   public Message(Integer id) {
     this.id = id;
@@ -26,11 +26,6 @@ public class Message {
 
   public Message(String name) {
     this.name = name;
-  }
-
-  public Message addField(Field field) {
-    this.fields.add(field);
-    return this;
   }
 
 }

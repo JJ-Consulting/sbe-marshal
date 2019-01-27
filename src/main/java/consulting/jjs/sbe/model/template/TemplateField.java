@@ -13,14 +13,14 @@ import lombok.ToString;
 public class TemplateField {
 
   @JacksonXmlProperty(isAttribute = true)
-  private Integer          id;
+  private Integer              id;
   @JacksonXmlProperty(isAttribute = true)
-  private String           name;
+  private String               name;
   @JsonProperty("type")
-  private String           typeName;
-  private TemplatePresence presence = TemplatePresence.REQUIRED;
-  private String           valueRef;
+  private String               typeName;
+  private TemplatePresence     presence = TemplatePresence.REQUIRED;
+  private String               valueRef;
   @JsonIgnore
-  private TemplateType     type;
+  private AbstractTemplateType type;
 
 }

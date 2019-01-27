@@ -7,8 +7,7 @@ public class ShortEncoder {
   public static class Signed implements TypeEncoder {
     @Override
     public void encode(String value, ByteBuffer buffer) {
-      int intValue = Integer.valueOf(value);
-      buffer.putShort((short) intValue);
+      buffer.putShort(Short.valueOf(value));
     }
 
     @Override
@@ -30,7 +29,8 @@ public class ShortEncoder {
   public static class Unsigned implements TypeEncoder {
     @Override
     public void encode(String value, ByteBuffer buffer) {
-      buffer.putShort(Short.valueOf(value));
+      int intValue = Integer.valueOf(value);
+      buffer.putShort((short) intValue);
     }
 
     @Override

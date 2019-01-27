@@ -1,17 +1,18 @@
 package consulting.jjs.sbe.marshal;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import consulting.jjs.sbe.model.template.AbstractTemplateType;
+import consulting.jjs.sbe.model.template.DeserializedTemplate;
 import consulting.jjs.sbe.model.template.MessageSchema;
-import consulting.jjs.sbe.model.template.TemplatePrimitive;
 import consulting.jjs.sbe.model.template.TemplateType;
-import lombok.Getter;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Marshaller {
@@ -19,27 +20,14 @@ public class Marshaller {
   private static final String    DESERIALIZATION_ERROR = "Unable to unmarshal input schema";
   private static final XmlMapper XML_MAPPER            = new XmlMapper();
 
-  private static final TemplateType[] PRIMITIVE_TYPES = {
-          TemplateType.builder().name("char").primitiveType(TemplatePrimitive.CHAR).build(),
-          TemplateType.builder().name("uint8").primitiveType(TemplatePrimitive.UINT_8).build(),
-          TemplateType.builder().name("uint16").primitiveType(TemplatePrimitive.UINT_16).build(),
-          TemplateType.builder().name("uint32").primitiveType(TemplatePrimitive.UINT_32).build(),
-          TemplateType.builder().name("uint64").primitiveType(TemplatePrimitive.UINT_64).build(),
-          TemplateType.builder().name("int8").primitiveType(TemplatePrimitive.INT_8).build(),
-          TemplateType.builder().name("int16").primitiveType(TemplatePrimitive.INT_16).build(),
-          TemplateType.builder().name("int32").primitiveType(TemplatePrimitive.INT_32).build(),
-          TemplateType.builder().name("int64").primitiveType(TemplatePrimitive.INT_64).build(),
-          TemplateType.builder().name("float").primitiveType(TemplatePrimitive.FLOAT).build(),
-          TemplateType.builder().name("double").primitiveType(TemplatePrimitive.DOUBLE).build()
-  };
+  private static final TemplateType[] PRIMITIVE_TYPES = Stream.of(
+          "char", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64", "float", "double")
+          .map(typeStr -> TemplateType.builder().name(typeStr)
+                  .primitiveType(TypeEncoderDeserializer.typeEncoderFactory(typeStr)).build())
+          .toArray(TemplateType[]::new);
 
-  @Getter
-  private MessageSchema             messageSchema;
-  @Getter
-  private Map<String, TemplateType> declaredTypes;
-
-  public void unmarshal(String input) {
-    unmarshal(() -> {
+  public DeserializedTemplate unmarshal(String input) {
+    return unmarshal(() -> {
       try {
         return XML_MAPPER.readValue(input, MessageSchema.class);
       } catch (IOException e) {
@@ -49,8 +37,8 @@ public class Marshaller {
 
   }
 
-  public void unmarshal(InputStream inputStream) {
-    unmarshal(() -> {
+  public DeserializedTemplate unmarshal(InputStream inputStream) {
+    return unmarshal(() -> {
       try {
         return XML_MAPPER.readValue(inputStream, MessageSchema.class);
       } catch (IOException e) {
@@ -59,11 +47,25 @@ public class Marshaller {
     });
   }
 
-  private void unmarshal(Supplier<MessageSchema> messageSchemaSupplier) {
-    messageSchema = messageSchemaSupplier.get();
-    declaredTypes = Stream.concat(Arrays.stream(PRIMITIVE_TYPES), messageSchema.getTypes().stream()
-            .flatMap(types -> types.getTypes().stream()))
-            .collect(Collectors.toMap(TemplateType::getName, templateType -> templateType));
+  private DeserializedTemplate unmarshal(Supplier<MessageSchema> messageSchemaSupplier) {
+    MessageSchema messageSchema = messageSchemaSupplier.get();
+
+    Map<String, AbstractTemplateType> declaredTypes         = new HashMap<>();
+    Map<String, AbstractTemplateType> declaredComposedTypes = new HashMap<>();
+
+    Consumer<AbstractTemplateType> templateTypeConsumer = (type) -> declaredTypes.put(type.getName(), type);
+    Arrays.stream(PRIMITIVE_TYPES).forEach(templateTypeConsumer);
+    messageSchema.getTypes().stream().flatMap(types -> types.getTypes().stream()).forEach(templateTypeConsumer);
+    messageSchema.getTypes().stream().flatMap(types -> types.getEnums().stream()).forEach(templateTypeConsumer);
+
+    messageSchema.getTypes().stream().forEach(types -> {
+      types.getTypes().forEach(templateTypeConsumer);
+      types.getEnums().forEach(templateTypeConsumer);
+      types.getSets().forEach(templateTypeConsumer);
+      types.getComposites().forEach(composite -> composite.getTypes().forEach(type ->
+              declaredComposedTypes.put(type.getName(), type)));
+    });
+    return new DeserializedTemplate(messageSchema, declaredTypes, declaredComposedTypes);
   }
 
 }

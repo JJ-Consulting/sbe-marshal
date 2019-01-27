@@ -1,11 +1,11 @@
 package consulting.jjs.sbe;
 
 import consulting.jjs.sbe.marshal.Marshaller;
-import consulting.jjs.sbe.model.input.Field;
+import consulting.jjs.sbe.model.input.FieldValue;
 import consulting.jjs.sbe.model.input.Message;
+import consulting.jjs.sbe.model.template.DeserializedTemplate;
 import consulting.jjs.sbe.model.template.MessageSchema;
 import consulting.jjs.sbe.model.template.TemplateMessage;
-import consulting.jjs.sbe.model.template.TemplateType;
 import consulting.jjs.sbe.store.TemplateStore;
 
 import java.io.InputStream;
@@ -22,21 +22,17 @@ public class Sbe {
   private Map<String, TemplateStore> messagesStore;
 
   public Sbe(String xmlMessageSchema) {
-    Marshaller marshaller = new Marshaller();
-    marshaller.unmarshal(xmlMessageSchema);
-    initStores(marshaller);
+    initStores(new Marshaller().unmarshal(xmlMessageSchema));
   }
 
   public Sbe(InputStream xmlMessageSchema) {
-    Marshaller marshaller = new Marshaller();
-    marshaller.unmarshal(xmlMessageSchema);
-    initStores(marshaller);
+    initStores(new Marshaller().unmarshal(xmlMessageSchema));
   }
 
-  private void initStores(Marshaller marshaller) {
-    messageSchema = marshaller.getMessageSchema();
+  private void initStores(DeserializedTemplate template) {
+    messageSchema = template.getMessageSchema();
     messagesStore = messageSchema.getMessages().stream()
-            .collect(Collectors.toMap(TemplateMessage::getName, message -> new TemplateStore(message, marshaller.getDeclaredTypes())));
+            .collect(Collectors.toMap(TemplateMessage::getName, message -> new TemplateStore(message, template.getDeclaredTypes(), template.getDeclaredComposedTypes())));
   }
 
   public ByteBuffer encode(Message message) {
@@ -61,9 +57,12 @@ public class Sbe {
     byteBuffer.order(messageSchema.getByteOrder());
     TemplateStore store = messagesStore.get(message.getName());
     encodeHeader(message, byteBuffer);
-    for (Field field : message.getFields()) {
-      TemplateType type = store.getTemplateFieldByName(field.getName()).getType();
-      type.encode(field.getValue(), byteBuffer);
+    for (FieldValue field : message.getFields()) {
+      field.consumeValue((fieldName, value) ->
+        store.getTemplateFieldByName(fieldName)
+                .getType()
+                .encode(value, byteBuffer)
+      );
     }
   }
 

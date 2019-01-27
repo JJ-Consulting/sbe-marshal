@@ -1,26 +1,49 @@
 package consulting.jjs.sbe.model.template;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import consulting.jjs.sbe.encoder.TypeEncoder;
+import consulting.jjs.sbe.marshal.SetEncoderDeserializer;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Setter
 @ToString
-public class TemplateSet {
+public class TemplateSet extends AbstractTemplateType {
 
   @JacksonXmlProperty(isAttribute = true)
-  private String               name;
-  @JacksonXmlProperty(isAttribute = true)
-  private String               encodingType;
+  @JsonDeserialize(using = SetEncoderDeserializer.class)
+  private TypeEncoder          encodingType;
+  @Setter
   @JacksonXmlElementWrapper(useWrapping = false)
   @JsonProperty("choice")
   private List<TemplateChoice> choices = new ArrayList<>();
 
+
+  @Override
+  public void encode(String value, ByteBuffer buffer) {
+    encodingType.encode(value, buffer);
+  }
+
+  @Override
+  public void encodeNull(ByteBuffer buffer) {
+
+  }
+
+  @Override
+  public void encodeMin(ByteBuffer buffer) {
+
+  }
+
+  @Override
+  public void encodeMax(ByteBuffer buffer) {
+
+  }
 }

@@ -5,10 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import consulting.jjs.sbe.encoder.TypeEncoder;
 import consulting.jjs.sbe.marshal.CharsetDeserializer;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import consulting.jjs.sbe.marshal.TypeEncoderDeserializer;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -16,60 +14,98 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 @Getter
-@Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class TemplateType implements TypeEncoder {
+public class TemplateType extends AbstractTemplateType {
 
   @JacksonXmlProperty(isAttribute = true)
-  private String            name;
+  @JsonDeserialize(using = TypeEncoderDeserializer.class)
+  private TypeEncoder primitiveType;
+  @Setter
   @JacksonXmlProperty(isAttribute = true)
-  private TemplatePrimitive primitiveType;
-  @JacksonXmlProperty(isAttribute = true)
-  private Integer           length;
+  private Integer     length;
   @JacksonXmlProperty(isAttribute = true)
   @JsonDeserialize(using = CharsetDeserializer.class)
-  private Charset           characterEncoding;
+  private Charset     characterEncoding;
   @JacksonXmlProperty(isAttribute = true)
-  private String            nullValue;
+  @Setter
+  private String      nullValue;
   @JacksonXmlProperty(isAttribute = true)
-  private String            minValue;
+  @Setter
+  private String      minValue;
   @JacksonXmlProperty(isAttribute = true)
-  private String            maxValue;
+  @Setter
+  private String      maxValue;
 
+  public void setPrimitiveType(TypeEncoder primitiveType) {
+    this.primitiveType = primitiveType;
+    if (characterEncoding != null) {
+      this.primitiveType.setCharset(characterEncoding);
+    }
+  }
+
+  public void setCharacterEncoding(Charset characterEncoding) {
+    this.characterEncoding = characterEncoding;
+    if (primitiveType != null) {
+      primitiveType.setCharset(characterEncoding);
+    }
+  }
 
   @Override
   public void encode(String value, ByteBuffer buffer) {
-    primitiveType.getEncoder().encode(value, buffer);
+    primitiveType.encode(value, buffer);
   }
 
   @Override
   public void encodeNull(ByteBuffer buffer) {
     if (nullValue == null) {
-      primitiveType.getEncoder().encodeNull(buffer);
+      primitiveType.encodeNull(buffer);
     } else {
-      primitiveType.getEncoder().encode(nullValue, buffer);
+      primitiveType.encode(nullValue, buffer);
     }
   }
 
   @Override
   public void encodeMin(ByteBuffer buffer) {
     if (minValue == null) {
-      primitiveType.getEncoder().encodeMin(buffer);
+      primitiveType.encodeMin(buffer);
     } else {
-      primitiveType.getEncoder().encode(minValue, buffer);
+      primitiveType.encode(minValue, buffer);
     }
   }
 
   @Override
   public void encodeMax(ByteBuffer buffer) {
     if (maxValue == null) {
-      primitiveType.getEncoder().encodeMax(buffer);
+      primitiveType.encodeMax(buffer);
     } else {
-      primitiveType.getEncoder().encode(maxValue, buffer);
+      primitiveType.encode(maxValue, buffer);
     }
   }
+
+  public static TemplateTypeBuilder builder() {
+    return new TemplateTypeBuilder();
+  }
+
+  public static class TemplateTypeBuilder {
+    private String name;
+    private TypeEncoder primitiveType;
+
+    public TemplateTypeBuilder name(String name) {
+      this.name = name;
+      return this;
+    }
+    public TemplateTypeBuilder primitiveType(TypeEncoder primitiveType) {
+      this.primitiveType = primitiveType;
+      return this;
+    }
+
+    public TemplateType build() {
+      TemplateType result = new TemplateType();
+      result.setName(name);
+      result.setPrimitiveType(primitiveType);
+      return result;
+    }
+  }
+
 }
