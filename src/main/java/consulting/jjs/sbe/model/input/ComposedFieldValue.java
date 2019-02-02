@@ -19,6 +19,8 @@ public class ComposedFieldValue extends AbstractField {
 
   @Override
   public void consumeValue(BiConsumer<String, String> nameValueConsumer) {
-    fieldValues.forEach(fieldValue -> fieldValue.consumeValue(nameValueConsumer));
+    fieldValues.forEach(fieldValue -> fieldValue.consumeValue((fieldName, value) ->
+            nameValueConsumer.accept(this.name + "." + fieldName, value)));
   }
+
 }

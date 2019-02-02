@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import consulting.jjs.sbe.encoder.TypeEncoder;
 import consulting.jjs.sbe.marshal.SetEncoderDeserializer;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Getter
 @ToString
+@NoArgsConstructor
 public class TemplateSet extends AbstractTemplateType {
 
   @JacksonXmlProperty(isAttribute = true)
@@ -26,6 +28,16 @@ public class TemplateSet extends AbstractTemplateType {
   @JsonProperty("choice")
   private List<TemplateChoice> choices = new ArrayList<>();
 
+  public TemplateSet(TemplateSet toCopy) {
+    super(toCopy.getName());
+    this.encodingType = toCopy.encodingType;
+    this.choices = toCopy.choices;
+  }
+
+  @Override
+  public AbstractTemplateType duplicate() {
+    return new TemplateSet(this);
+  }
 
   @Override
   public void encode(String value, ByteBuffer buffer) {

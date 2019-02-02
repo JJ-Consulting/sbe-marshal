@@ -1,38 +1,25 @@
 package consulting.jjs.sbe;
 
-import consulting.jjs.sbe.marshal.Marshaller;
 import consulting.jjs.sbe.model.input.FieldValue;
 import consulting.jjs.sbe.model.input.Message;
-import consulting.jjs.sbe.model.template.DeserializedTemplate;
-import consulting.jjs.sbe.model.template.MessageSchema;
-import consulting.jjs.sbe.model.template.TemplateMessage;
+import consulting.jjs.sbe.store.MessageStore;
 import consulting.jjs.sbe.store.TemplateStore;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Sbe {
 
   private static final int DEFAULT_MEMORY_SIZE = 1024;
 
-  private MessageSchema              messageSchema;
-  // Fields store by message name
-  private Map<String, TemplateStore> messagesStore;
+  private TemplateStore templateStore;
 
   public Sbe(String xmlMessageSchema) {
-    initStores(new Marshaller().unmarshal(xmlMessageSchema));
+    templateStore = new TemplateStore(xmlMessageSchema);
   }
 
   public Sbe(InputStream xmlMessageSchema) {
-    initStores(new Marshaller().unmarshal(xmlMessageSchema));
-  }
-
-  private void initStores(DeserializedTemplate template) {
-    messageSchema = template.getMessageSchema();
-    messagesStore = messageSchema.getMessages().stream()
-            .collect(Collectors.toMap(TemplateMessage::getName, message -> new TemplateStore(message, template.getDeclaredTypes(), template.getDeclaredComposedTypes())));
+    templateStore = new TemplateStore(xmlMessageSchema);
   }
 
   public ByteBuffer encode(Message message) {
@@ -54,8 +41,8 @@ public class Sbe {
   }
 
   public void encode(Message message, ByteBuffer byteBuffer) {
-    byteBuffer.order(messageSchema.getByteOrder());
-    TemplateStore store = messagesStore.get(message.getName());
+    byteBuffer.order(templateStore.getByteOrder());
+    MessageStore store = templateStore.getMessage(message.getName());
     encodeHeader(message, byteBuffer);
     for (FieldValue field : message.getFields()) {
       field.consumeValue((fieldName, value) ->
@@ -67,7 +54,7 @@ public class Sbe {
   }
 
   private int getMessageSize(Message message) {
-    // TODO
+    // TODO: get exact size from message
     return 1024;
   }
 

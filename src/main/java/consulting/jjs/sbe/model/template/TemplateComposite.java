@@ -23,6 +23,9 @@ public class TemplateComposite {
   @JsonProperty("type")
   private List<TemplateType> types = new ArrayList<>();
   @JacksonXmlElementWrapper(useWrapping = false)
+  @JsonProperty("enum")
+  private List<TemplateEnum> enums = new ArrayList<>();
+  @JacksonXmlElementWrapper(useWrapping = false)
   @JsonProperty("ref")
   private List<TemplateTypeReference> references = new ArrayList<>();
 

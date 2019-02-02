@@ -4,14 +4,15 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import consulting.jjs.sbe.model.template.AbstractTemplateType;
 import consulting.jjs.sbe.model.template.DeserializedTemplate;
 import consulting.jjs.sbe.model.template.MessageSchema;
+import consulting.jjs.sbe.model.template.TemplateComposite;
 import consulting.jjs.sbe.model.template.TemplateType;
+import consulting.jjs.sbe.model.template.TemplateTypeReference;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -25,6 +26,9 @@ public class Marshaller {
           .map(typeStr -> TemplateType.builder().name(typeStr)
                   .primitiveType(TypeEncoderDeserializer.typeEncoderFactory(typeStr)).build())
           .toArray(TemplateType[]::new);
+
+  private DeclaredTypes              declaredTypes;
+  private Map<String, DeclaredTypes> declaredComposedTypes;
 
   public DeserializedTemplate unmarshal(String input) {
     return unmarshal(() -> {
@@ -47,25 +51,65 @@ public class Marshaller {
     });
   }
 
+  private void templateTypeConsumer(AbstractTemplateType type) {
+    declaredTypes.declareType(type.getName(), type);
+  }
+
   private DeserializedTemplate unmarshal(Supplier<MessageSchema> messageSchemaSupplier) {
+    declaredTypes = new DeclaredTypes();
+    declaredComposedTypes = new HashMap<>();
+
+    Arrays.stream(PRIMITIVE_TYPES).forEach(this::templateTypeConsumer);
+
     MessageSchema messageSchema = messageSchemaSupplier.get();
-
-    Map<String, AbstractTemplateType> declaredTypes         = new HashMap<>();
-    Map<String, AbstractTemplateType> declaredComposedTypes = new HashMap<>();
-
-    Consumer<AbstractTemplateType> templateTypeConsumer = (type) -> declaredTypes.put(type.getName(), type);
-    Arrays.stream(PRIMITIVE_TYPES).forEach(templateTypeConsumer);
-    messageSchema.getTypes().stream().flatMap(types -> types.getTypes().stream()).forEach(templateTypeConsumer);
-    messageSchema.getTypes().stream().flatMap(types -> types.getEnums().stream()).forEach(templateTypeConsumer);
-
-    messageSchema.getTypes().stream().forEach(types -> {
-      types.getTypes().forEach(templateTypeConsumer);
-      types.getEnums().forEach(templateTypeConsumer);
-      types.getSets().forEach(templateTypeConsumer);
-      types.getComposites().forEach(composite -> composite.getTypes().forEach(type ->
-              declaredComposedTypes.put(type.getName(), type)));
+    messageSchema.getTypes().forEach(types -> {
+      types.getTypes().forEach(this::templateTypeConsumer);
+      types.getEnums().forEach(this::templateTypeConsumer);
+      types.getSets().forEach(this::templateTypeConsumer);
+      types.getComposites().forEach(this::templateCompositeTypeConsumer);
     });
+    linkCompositesReferences(messageSchema);
     return new DeserializedTemplate(messageSchema, declaredTypes, declaredComposedTypes);
+  }
+
+  private void linkCompositesReferences(MessageSchema messageSchema) {
+    messageSchema.getTypes().stream()
+            .flatMap(types -> types.getComposites().stream())
+            .forEach(parentComposite ->
+                    parentComposite.getReferences().stream().filter(TemplateTypeReference::isReferenceComposite)
+                            .forEach(ref -> {
+                              linkCompositeReferences(declaredComposedTypes.get(parentComposite.getName()),
+                                      declaredComposedTypes.get(ref.getType()), ref.getName());
+                            })
+            );
+  }
+
+  private void linkCompositeReferences(DeclaredTypes parentComposite,
+                                       DeclaredTypes childComposite, String referenceName) {
+    childComposite.forEach((name, type) -> {
+      AbstractTemplateType duplicatedType = type.duplicate();
+      duplicatedType.setName(referenceName + "." + type.getName());
+      parentComposite.declareType(duplicatedType.getName(), duplicatedType);
+    });
+  }
+
+  private void templateCompositeTypeConsumer(TemplateComposite composite) {
+    DeclaredTypes compositeTypes = new DeclaredTypes();
+
+    composite.getTypes().forEach(type -> compositeTypes.declareType(type.getName(), type));
+    composite.getEnums().forEach(type -> compositeTypes.declareType(type.getName(), type));
+    composite.getReferences().forEach(ref -> { // handling references to simple value
+      AbstractTemplateType type = declaredTypes.getDeclaredType(ref.getType());
+      if (type != null) { // reference of composite -> NPE
+        AbstractTemplateType duplicated = type.duplicate();
+        duplicated.setName(ref.getName());
+        compositeTypes.declareType(duplicated.getName(), duplicated);
+      } else {
+        ref.setReferenceComposite(true);
+      }
+    });
+
+    declaredComposedTypes.put(composite.getName(), compositeTypes);
   }
 
 }

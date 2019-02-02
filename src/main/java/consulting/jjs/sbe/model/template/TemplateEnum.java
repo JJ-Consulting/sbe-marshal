@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import consulting.jjs.sbe.encoder.TypeEncoder;
 import consulting.jjs.sbe.marshal.TypeEncoderDeserializer;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -18,11 +19,9 @@ import java.util.stream.Collectors;
 
 @Getter
 @ToString
+@NoArgsConstructor
 public class TemplateEnum extends AbstractTemplateType {
 
-  @Setter
-  @JacksonXmlProperty(isAttribute = true)
-  private String                  name;
   @Setter
   @JacksonXmlProperty(isAttribute = true)
   @JsonDeserialize(using = TypeEncoderDeserializer.class)
@@ -31,6 +30,18 @@ public class TemplateEnum extends AbstractTemplateType {
   @JsonProperty("validValue")
   private List<TemplateEnumValue> values = new ArrayList<>();
   private Map<String, String>     valuesByName;
+
+  public TemplateEnum(TemplateEnum toCopy) {
+    super(toCopy.getName());
+    this.encodingType = toCopy.encodingType;
+    this.values = toCopy.values;
+    this.valuesByName = toCopy.valuesByName;
+  }
+
+  @Override
+  public AbstractTemplateType duplicate() {
+    return new TemplateEnum(this);
+  }
 
   public void setValues(List<TemplateEnumValue> values) {
     this.values = values;

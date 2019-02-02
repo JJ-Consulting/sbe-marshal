@@ -7,6 +7,7 @@ import consulting.jjs.sbe.encoder.TypeEncoder;
 import consulting.jjs.sbe.marshal.CharsetDeserializer;
 import consulting.jjs.sbe.marshal.TypeEncoderDeserializer;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -16,6 +17,7 @@ import java.nio.charset.Charset;
 @Getter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
 public class TemplateType extends AbstractTemplateType {
 
   @JacksonXmlProperty(isAttribute = true)
@@ -36,6 +38,21 @@ public class TemplateType extends AbstractTemplateType {
   @JacksonXmlProperty(isAttribute = true)
   @Setter
   private String      maxValue;
+
+  public TemplateType(TemplateType toCopy) {
+    super(toCopy.getName());
+    this.primitiveType = toCopy.primitiveType;
+    this.length = toCopy.length;
+    this.characterEncoding = toCopy.characterEncoding;
+    this.nullValue = toCopy.nullValue;
+    this.minValue = toCopy.minValue;
+    this.maxValue = toCopy.maxValue;
+  }
+
+  @Override
+  public AbstractTemplateType duplicate() {
+    return new TemplateType(this);
+  }
 
   public void setPrimitiveType(TypeEncoder primitiveType) {
     this.primitiveType = primitiveType;

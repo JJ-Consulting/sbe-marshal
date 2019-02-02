@@ -1,5 +1,6 @@
 package consulting.jjs.sbe.model.template;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +15,7 @@ public class TemplateTypeReference {
   private String name;
   @JacksonXmlProperty(isAttribute = true)
   private String type;
-
-  private TemplateType referencedType; // TODO: inject referenced type after unmarshalling
+  @JsonIgnore
+  private boolean referenceComposite = false;
 
 }

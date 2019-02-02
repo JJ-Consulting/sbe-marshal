@@ -1,7 +1,6 @@
 package consulting.jjs.sbe.marshal;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import consulting.jjs.sbe.encoder.ByteEncoder;
@@ -18,7 +17,7 @@ import java.io.IOException;
 public class TypeEncoderDeserializer extends JsonDeserializer {
 
   @Override
-  public Object deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+  public Object deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
     String textValue = jsonParser.getText();
     TypeEncoder typeEncoder = typeEncoderFactory(textValue);
     if (typeEncoder == null) {

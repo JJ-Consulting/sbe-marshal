@@ -46,7 +46,13 @@ public class SbeTest {
                             .addFieldValue(new SimpleFieldValue("capacity", "2000"))
                             .addFieldValue(new SimpleFieldValue("numCylinders", "4"))
                             .addFieldValue(new ArrayFieldValue("manufacturerCode").addValue("1").addValue("2").addValue("3"))
-            ))
+                            .addFieldValue(new SimpleFieldValue("efficiency", "35"))
+                            .addFieldValue(new SimpleFieldValue("boosterEnabled", "T"))
+                            .addFieldValue(new ComposedFieldValue("booster")
+                                    .addFieldValue(new SimpleFieldValue("BoostType", "NITROUS"))
+                                    .addFieldValue(new SimpleFieldValue("horsePower", "200")))
+                    )
+            )
             .build();
   }
 
