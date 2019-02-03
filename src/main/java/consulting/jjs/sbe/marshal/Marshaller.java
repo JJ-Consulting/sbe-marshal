@@ -1,9 +1,25 @@
+/*
+ * Copyright (c) 2019 J&J's Consulting.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package consulting.jjs.sbe.marshal;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import consulting.jjs.sbe.model.template.AbstractTemplateType;
 import consulting.jjs.sbe.model.template.DeserializedTemplate;
-import consulting.jjs.sbe.model.template.MessageSchema;
+import consulting.jjs.sbe.model.template.MessagesSchema;
 import consulting.jjs.sbe.model.template.TemplateComposite;
 import consulting.jjs.sbe.model.template.TemplateType;
 import consulting.jjs.sbe.model.template.TemplateTypeReference;
@@ -33,7 +49,7 @@ public class Marshaller {
   public DeserializedTemplate unmarshal(String input) {
     return unmarshal(() -> {
       try {
-        return XML_MAPPER.readValue(input, MessageSchema.class);
+        return XML_MAPPER.readValue(input, MessagesSchema.class);
       } catch (IOException e) {
         throw new RuntimeException(DESERIALIZATION_ERROR, e);
       }
@@ -44,7 +60,7 @@ public class Marshaller {
   public DeserializedTemplate unmarshal(InputStream inputStream) {
     return unmarshal(() -> {
       try {
-        return XML_MAPPER.readValue(inputStream, MessageSchema.class);
+        return XML_MAPPER.readValue(inputStream, MessagesSchema.class);
       } catch (IOException e) {
         throw new RuntimeException(DESERIALIZATION_ERROR, e);
       }
@@ -55,25 +71,25 @@ public class Marshaller {
     declaredTypes.declareType(type.getName(), type);
   }
 
-  private DeserializedTemplate unmarshal(Supplier<MessageSchema> messageSchemaSupplier) {
+  private DeserializedTemplate unmarshal(Supplier<MessagesSchema> messageSchemaSupplier) {
     declaredTypes = new DeclaredTypes();
     declaredComposedTypes = new HashMap<>();
 
     Arrays.stream(PRIMITIVE_TYPES).forEach(this::templateTypeConsumer);
 
-    MessageSchema messageSchema = messageSchemaSupplier.get();
-    messageSchema.getTypes().forEach(types -> {
+    MessagesSchema messagesSchema = messageSchemaSupplier.get();
+    messagesSchema.getTypes().forEach(types -> {
       types.getTypes().forEach(this::templateTypeConsumer);
       types.getEnums().forEach(this::templateTypeConsumer);
       types.getSets().forEach(this::templateTypeConsumer);
       types.getComposites().forEach(this::templateCompositeTypeConsumer);
     });
-    linkCompositesReferences(messageSchema);
-    return new DeserializedTemplate(messageSchema, declaredTypes, declaredComposedTypes);
+    linkCompositesReferences(messagesSchema);
+    return new DeserializedTemplate(messagesSchema, declaredTypes, declaredComposedTypes);
   }
 
-  private void linkCompositesReferences(MessageSchema messageSchema) {
-    messageSchema.getTypes().stream()
+  private void linkCompositesReferences(MessagesSchema messagesSchema) {
+    messagesSchema.getTypes().stream()
             .flatMap(types -> types.getComposites().stream())
             .forEach(parentComposite ->
                     parentComposite.getReferences().stream().filter(TemplateTypeReference::isReferenceComposite)

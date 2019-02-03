@@ -14,17 +14,31 @@
  * limitations under the License.
  */
 
-package consulting.jjs.sbe.model.template;
+package consulting.jjs.sbe.model.input;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
-public enum TemplatePresence {
+import java.util.ArrayList;
+import java.util.List;
 
-  @JsonProperty("required")
-  REQUIRED,
-  @JsonProperty(value = "optional")
-  OPTIONAL,
-  @JsonProperty(value = "constant")
-  CONSTANT
+public class Group {
+
+  @Getter
+  private String           name;
+  @Getter
+  private List<GroupValue> groupValues = new ArrayList<>();
+
+  public Group(String name) {
+    this.name = name;
+  }
+
+  public Group addGroupValue(GroupValue groupValue) {
+    groupValue.name = name;
+    groupValues.add(groupValue);
+    return this;
+  }
+  public Integer getNumInGroup() {
+    return groupValues.size();
+  }
 
 }

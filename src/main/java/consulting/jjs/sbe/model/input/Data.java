@@ -16,27 +16,38 @@
 
 package consulting.jjs.sbe.model.input;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
-public class ComposedFieldValue extends AbstractField {
+public class Data extends AbstractField {
 
-  private List<FieldValue> fieldValues = new ArrayList<>();
+  private final String       strValue;   // char array
+  private final List<String> arrayValue; // generic array
+  private       Integer      length;
 
-  public ComposedFieldValue(String name) {
+  public Data(String name, String strValue) {
     super(name);
+    this.strValue = strValue;
+
+    length = strValue.length();
+    arrayValue = null;
   }
 
-  public ComposedFieldValue addFieldValue(FieldValue fieldValue) {
-    this.fieldValues.add(fieldValue);
-    return this;
+  public Data(String name, List<String> arrayValue) {
+    super(name);
+    this.arrayValue = arrayValue;
+
+    length = arrayValue.size();
+    strValue = null;
   }
 
   @Override
   public void consumeValue(BiConsumer<String, String> nameValueConsumer) {
-    fieldValues.forEach(fieldValue -> fieldValue.consumeValue((fieldName, value) ->
-            nameValueConsumer.accept(this.name + "." + fieldName, value)));
-  }
+    nameValueConsumer.accept(name + ".length", length.toString());
 
+    Stream<String> values = strValue != null ? Arrays.stream(strValue.split("")) : arrayValue.stream();
+    values.forEach(value -> nameValueConsumer.accept(name + ".varData", value));
+  }
 }

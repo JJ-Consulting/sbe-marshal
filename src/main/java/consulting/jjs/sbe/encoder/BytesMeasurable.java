@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package consulting.jjs.sbe.model.template;
+package consulting.jjs.sbe.encoder;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+/**
+ * Implemented by object representing a measurable entity size in bytes.
+ */
+public interface BytesMeasurable {
 
-public enum TemplatePresence {
-
-  @JsonProperty("required")
-  REQUIRED,
-  @JsonProperty(value = "optional")
-  OPTIONAL,
-  @JsonProperty(value = "constant")
-  CONSTANT
+  /**
+   * Gets the size of an SBE component in bytes.
+   *
+   * @return the size in bytes
+   */
+  Integer getSize();
 
 }

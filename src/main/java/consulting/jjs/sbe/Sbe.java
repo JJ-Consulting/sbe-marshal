@@ -1,8 +1,22 @@
+/*
+ * Copyright (c) 2019 J&J's Consulting.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package consulting.jjs.sbe;
 
-import consulting.jjs.sbe.model.input.FieldValue;
 import consulting.jjs.sbe.model.input.Message;
-import consulting.jjs.sbe.store.MessageStore;
 import consulting.jjs.sbe.store.TemplateStore;
 
 import java.io.InputStream;
@@ -42,24 +56,12 @@ public class Sbe {
 
   public void encode(Message message, ByteBuffer byteBuffer) {
     byteBuffer.order(templateStore.getByteOrder());
-    MessageStore store = templateStore.getMessage(message.getName());
-    encodeHeader(message, byteBuffer);
-    for (FieldValue field : message.getFields()) {
-      field.consumeValue((fieldName, value) ->
-        store.getTemplateFieldByName(fieldName)
-                .getType()
-                .encode(value, byteBuffer)
-      );
-    }
+    new SbeEncoder(message, byteBuffer, templateStore).encode();
   }
 
   private int getMessageSize(Message message) {
     // TODO: get exact size from message
     return 1024;
-  }
-
-  private void encodeHeader(Message message, ByteBuffer buffer) {
-    // TODO
   }
 
 }
