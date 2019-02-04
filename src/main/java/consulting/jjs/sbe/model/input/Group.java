@@ -17,28 +17,53 @@
 package consulting.jjs.sbe.model.input;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
-public class Group {
+public class Group extends AbstractField {
 
-  @Getter
-  private String           name;
   @Getter
   private List<GroupValue> groupValues = new ArrayList<>();
 
+  @Setter
+  private BiConsumer<String, Integer> groupHeaderConsumer;
+  private BiConsumer<String, String>  nameValueConsumer;
+
   public Group(String name) {
-    this.name = name;
+    super(name);
   }
 
   public Group addGroupValue(GroupValue groupValue) {
-    groupValue.name = name;
     groupValues.add(groupValue);
     return this;
   }
-  public Integer getNumInGroup() {
-    return groupValues.size();
+
+  public void groupNameAppender(String fieldName, String value) {
+    nameValueConsumer.accept(this.name + "." + fieldName, value);
+  }
+
+  public void groupNameAppender(String fieldName, Integer value) {
+    groupHeaderConsumer.accept(this.name + "." + fieldName, value);
+  }
+
+  @Override
+  public void consumeValue(BiConsumer<String, String> nameValueConsumer) {
+    this.nameValueConsumer = nameValueConsumer;
+
+    groupHeaderConsumer.accept(name, groupValues.size());
+
+    groupValues.forEach(groupValue -> {
+      groupValue.getFieldValues().forEach(f -> f.consumeValue(this::groupNameAppender));
+      groupValue.getInnerGroups().forEach(g -> {
+        g.setGroupHeaderConsumer(this::groupNameAppender);
+        g.consumeValue(this::groupNameAppender);
+      });
+      groupValue.getDataValues().forEach(d -> d.consumeValue(this::groupNameAppender));
+    });
+
   }
 
 }

@@ -21,32 +21,16 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 @Getter
 @Setter
-public class GroupValue extends AbstractField {
+public class GroupValue {
 
   private List<FieldValue> fieldValues = new ArrayList<>();
   private List<FieldValue> dataValues  = new ArrayList<>();
   private List<Group>      innerGroups = new ArrayList<>();
 
-  public GroupValue(String name) {
-    super(name);
-  }
-
   public GroupValue() {
-    super(null);
-  }
-
-  @Override
-  public void consumeValue(BiConsumer<String, String> nameValueConsumer) {
-    BiConsumer<String, String> groupNameAppender = (fieldName, value) ->
-            nameValueConsumer.accept(this.name + "." + fieldName, value);
-
-    fieldValues.forEach(fieldValue -> fieldValue.consumeValue(groupNameAppender));
-    // TODO: separate field and group
-    dataValues.forEach(dataValue -> dataValue.consumeValue(groupNameAppender));
   }
 
   public GroupValue addFieldValue(FieldValue fieldValue) {

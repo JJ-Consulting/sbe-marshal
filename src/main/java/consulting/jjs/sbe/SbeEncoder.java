@@ -19,20 +19,20 @@ package consulting.jjs.sbe;
 import consulting.jjs.sbe.model.input.ComposedFieldValue;
 import consulting.jjs.sbe.model.input.FieldValue;
 import consulting.jjs.sbe.model.input.Group;
-import consulting.jjs.sbe.model.input.GroupValue;
 import consulting.jjs.sbe.model.input.Message;
 import consulting.jjs.sbe.model.input.SimpleFieldValue;
 import consulting.jjs.sbe.store.MessageStore;
 import consulting.jjs.sbe.store.TemplateStore;
 
 import java.nio.ByteBuffer;
+import java.util.function.BiConsumer;
 
 public class SbeEncoder {
 
-  private final Message message;
-  private final ByteBuffer buffer;
+  private final Message       message;
+  private final ByteBuffer    buffer;
   private final TemplateStore templateStore;
-  private final MessageStore store;
+  private final MessageStore  store;
 
   public SbeEncoder(Message message, ByteBuffer buffer, TemplateStore templateStore) {
     this.message = message;
@@ -69,18 +69,15 @@ public class SbeEncoder {
     message.getGroups().forEach(this::encodeGroup);
   }
 
-  private void encodeGroup(Group group) {
-    ComposedFieldValue groupHeader = new ComposedFieldValue("groupSizeEncoding")
-            .addFieldValue(new SimpleFieldValue("blockLength", store.getGroupSize(group.getName())))
-            .addFieldValue(new SimpleFieldValue("numInGroup", group.getNumInGroup()));
-    encodeField(groupHeader);
-
-    for (GroupValue groupValue: group.getGroupValues()) {
-      encodeField(groupValue);
-      for (Group innerGroup: groupValue.getInnerGroups()) {
-        encodeGroup(innerGroup); // recursively encoding group
-      }
-    }
+  private void encodeGroup(Group topLevelGroup) {
+    BiConsumer<String, Integer> groupHeaderConsumer = (groupName, groupSize) -> {
+      ComposedFieldValue groupHeader = new ComposedFieldValue("groupSizeEncoding")
+              .addFieldValue(new SimpleFieldValue("blockLength", store.getGroupSize(groupName)))
+              .addFieldValue(new SimpleFieldValue("numInGroup", groupSize));
+      encodeField(groupHeader);
+    };
+    topLevelGroup.setGroupHeaderConsumer(groupHeaderConsumer);
+    encodeField(topLevelGroup);
   }
 
   private void encodeField(FieldValue field) {
